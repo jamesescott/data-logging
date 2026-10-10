@@ -25,3 +25,6 @@ History chart can display raw readings and a 7-calendar-day moving average indep
 
 ## Version 3
 The date/time entry field defaults to the device's current local date and time on launch and resets to the current date and time after each successful entry. You can edit it for historical entries.
+
+## Version 4
+Fixed stale-asset loading with versioned JavaScript and CSS references. The date/time field is now also prefilled directly from the HTML before the database initializes.
