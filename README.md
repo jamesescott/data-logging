@@ -22,3 +22,6 @@ Records stay in the browser's local IndexedDB, not on GitHub. Each device mainta
 
 ## Version 2
 History chart can display raw readings and a 7-calendar-day moving average independently. Multiple readings on a day are averaged first; only days with observations contribute to the average. Existing IndexedDB data is preserved.
+
+## Version 3
+The date/time entry field defaults to the device's current local date and time on launch and resets to the current date and time after each successful entry. You can edit it for historical entries.
