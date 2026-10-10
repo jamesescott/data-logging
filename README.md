@@ -19,3 +19,6 @@ Upload `index.html`, `app.js`, `style.css`, `manifest.json`, `service-worker.js`
 ## Privacy and backup
 
 Records stay in the browser's local IndexedDB, not on GitHub. Each device maintains a separate database. Export JSON backups regularly; clearing browser site data can erase logs. CSV files do not include log metadata. There is no automatic cross-device sync.
+
+## Version 2
+History chart can display raw readings and a 7-calendar-day moving average independently. Multiple readings on a day are averaged first; only days with observations contribute to the average. Existing IndexedDB data is preserved.
