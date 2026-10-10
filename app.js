@@ -33,4 +33,23 @@ function pick(mode){importMode=mode;$('file').accept=mode==='csv'?'.csv,text/csv
 $('importCsv').onclick=()=>{if(activeLog)pick('csv');else alert('Create a log first')};$('restore').onclick=()=>pick('json');
 $('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const content=await file.text();if(importMode==='csv'){const rows=parseCsv(content.replace(/^\uFEFF/,''));if(!rows.length)throw Error('Empty CSV');let start=0;const header=rows[0].map(v=>v.trim().toLowerCase());let dateCol=0,valueCol=1;if(header.includes('date')&&header.includes('value')){dateCol=header.indexOf('date');valueCol=header.indexOf('value');start=1}const existing=new Set((await entries()).map(x=>x.date+'|'+x.value));let count=0;const parsed=[];for(let i=start;i<rows.length;i++){const r=rows[i];if(r.length<=Math.max(dateCol,valueCol))throw Error('Missing column at row '+(i+1));const date=normalizeDate(r[dateCol]);const value=Number(r[valueCol]);if(!r[valueCol].trim()||!Number.isFinite(value))throw Error('Invalid value at row '+(i+1));const key=date+'|'+value;if(existing.has(key))continue;existing.add(key);parsed.push({id:uuid(),logId:activeLog,date,value});count++}for(const item of parsed)await put('entries',item);alert(`Imported ${count} measurements; duplicates skipped.`)}else{const b=JSON.parse(content);if(b.format!=='DataLogging'||b.version!==1||!Array.isArray(b.logs)||!Array.isArray(b.entries))throw Error('Unrecognized backup');if(!confirm('Merge this backup into your local logs? Matching IDs will be updated.'))return;for(const l of b.logs){if(typeof l.id!=='string'||typeof l.name!=='string')throw Error('Invalid log data')}for(const x of b.entries){if(typeof x.id!=='string'||typeof x.logId!=='string'||!Number.isFinite(x.value)||typeof x.date!=='string')throw Error('Invalid measurement data')}for(const l of b.logs)await put('logs',l);for(const x of b.entries)await put('entries',x);alert('Backup restored')}await refresh()}catch(err){alert('Import failed: '+err.message)}};
 window.addEventListener('resize',()=>render());
-(async()=>{db=await openDb();prefillDateTime();await refresh();if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js?v=5').catch(console.warn)})().catch(e=>alert('Storage unavailable: '+e.message));
+(async()=>{db=await openDb();prefillDateTime();await refresh();if('serviceWorker' in navigator) initServiceWorkerUpdates()})().catch(e=>alert('Storage unavailable: '+e.message));
+
+
+// Check for updated application code whenever the app comes back online or into view.
+function initServiceWorkerUpdates(){
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(refreshing)return;
+    refreshing=true;
+    // A changed controller indicates a new release. Reload without touching IndexedDB.
+    window.location.reload();
+  });
+  navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'})
+    .then(reg=>{
+      const check=()=>{if(navigator.onLine)reg.update().catch(()=>{});};
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
+      window.addEventListener('online',check);
+      check();
+    }).catch(console.warn);
+}
