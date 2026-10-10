@@ -28,3 +28,6 @@ The date/time entry field defaults to the device's current local date and time o
 
 ## Version 4
 Fixed stale-asset loading with versioned JavaScript and CSS references. The date/time field is now also prefilled directly from the HTML before the database initializes.
+
+## Version 5
+Added 1 week and 2 weeks to the history chart time-range selector.
